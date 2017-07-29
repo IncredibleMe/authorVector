@@ -22,14 +22,12 @@ def get_doc_list(folder_name):
     for file in file_list:
         st = open(str(file),'r').read()
         doc_list.append(st)
-        dir_list.append(os.path.basename(folder_name))
+        dir_list.append(str(file).rsplit('/', 2)[-2])
     print ('Found %s documents under the dir %s .....'%(len(file_list),folder_name))
-    print ("e")
     return doc_list, dir_list
 
 
-
-def get_doc(folder_name):
+def get_doc(folder_name, type):
     global id
     doc_list, dir_list = get_doc_list(folder_name)
     tokenizer = RegexpTokenizer(r'\w+')
@@ -42,6 +40,7 @@ def get_doc(folder_name):
     texts = []
 
     for index,i in enumerate(doc_list):
+
         # for tagged doc
         wordslist = []
         tagslist = []
@@ -64,10 +63,16 @@ def get_doc(folder_name):
         # add tokens to list
         texts.append(length_tokens)
 
-        # print (dir_list[index])
-        td = TaggedDocument(words=gensim.utils.to_unicode(str.encode(' '.join(stemmed_tokens))).split(),tags=[index])
+        tagg = str(type)+dir_list[index]+str(id)
+        # print (tagg)
 
+
+        td = TaggedDocument(words=gensim.utils.to_unicode(str.encode(' '.join(stemmed_tokens))).split(),tags=[tagg])
+        id = id+1
+        if (id==50):
+            id = 0
         taggeddoc.append(td)
+
 
     return taggeddoc
 
