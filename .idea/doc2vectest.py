@@ -1,67 +1,80 @@
+from os import listdir
+from os.path import isfile, join
+import os
 import gensim
-import load
-# numpy
+import os
+import nltk.data
 import numpy
+import pathlib
+from gensim.models.doc2vec import TaggedDocument, Doc2Vec
+from sklearn import svm, metrics
 
-# random
-from random import shuffle
+docLabels = []
+folder_name = "C10/C10train"
 
-# classifier
-from sklearn.linear_model import LogisticRegression
-
-
-#load.get_doc_list('/home/jack/Downloads/C10/C10train')
-documents = load.get_doc('/home/jack/Downloads/C10/C10train', 'TRAIN')
-documents += load.get_doc('/home/jack/Downloads/C10/C10test', 'TEST')
-# documents += load.get_doc('/home/jack/Downloads/C10/C10test/AlexanderSmith')
-print ('Data Loading finished')
-print (len(documents),type(documents))
-
-#print (len(documents))
-
-
-# model = gensim.models.Doc2Vec(documents, dm = 0, alpha=0.025, size= 300, min_alpha=0.025, min_count=0)
-model = gensim.models.Doc2Vec(documents, size=300, window=10, min_count=5, workers=11,alpha=0.025, min_alpha=0.025)
+doc_list = []
+dir_list = []
+file_list = []
+i = 10
+#gia ka8e arxeio poy vrisketai ston fakelo C10train pare tin dieu8unsi tou arxeiou
+for dirpath, dirnames, filenames in os.walk(folder_name):
+    for name in filenames:
+        file_list.append(pathlib.PurePath(dirpath, name))
 
 
-print (model.docvecs.count)
+#gia ka8e arxeio anoi3e to kai spase to arxeio se protaseis kai topo8etis
+for file in file_list:
+    st = open(str(file),'r').read()
+    sent_text = nltk.sent_tokenize(st)
+    for sentence in sent_text:
+        doc_list.append(sentence)
+        docLabels.append(i)
+        i=i+1
 
-
-for epoch in range(10):
-    if epoch % 20 == 0:
-        print ('Now training epoch %s'%epoch)
-    model.train(documents, total_examples=model.corpus_count, epochs=model.iter)
-    model.alpha -= 0.002  # decrease the learning rate
-    model.min_alpha = model.alpha  # fix the learning rate, no decay
-    model.train(documents, total_examples=model.corpus_count, epochs=model.iter)
+taggeddoc=[]
 
 
 
-classifier = LogisticRegression()
+for doc, index in zip(doc_list, docLabels):
+    print (index)
+    td = TaggedDocument(words=doc.strip().split(" "), tags=[str(index)])
+    taggeddoc.append(td)
 
-authors=['DavidLawder', 'RobinSidel', 'MureDickie', 'AlanCrosby', 'JaneMacartney', 'JimGilchrist', 'AlexanderSmith', 'MarcelMichelson', 'ToddNissen', 'BenjaminKangLim']
-
-train_arrays = numpy.zeros((500, 300))
-# train_arrays = []
-train_labels = [''] * 500
-
-for i in range(10):
-    for j in range(50):
-        prefix_train = 'TRAIN' + authors[i] + str(j)
-        train_arrays[i] = model.docvecs[prefix_train]
-        train_labels[i] = authors[i]
-
-test_arrays = numpy.zeros((500, 300))
-#test_labels = numpy.zeros(500)
-test_labels = [''] * 500
-
-for i in range(10):
-    for j in range(50):
-        prefix_test = 'TEST' + authors[i] + str(j)
-        test_arrays[i] = model.docvecs[prefix_test]
-        test_labels[i] = authors[i]
-
-classifier.fit(train_arrays, train_labels)
+# model = gensim.models.Doc2Vec(taggeddoc,  dm = 0, alpha=0.025, size= 20, min_alpha=0.025, min_count=0)
+#
+#
+# for epoch in range(10):
+#     if epoch % 2 == 0:
+#         print ('Now training epoch %s'%epoch)
+#     model.train(taggeddoc, total_examples=model.corpus_count, epochs=model.iter)
+#     model.alpha -= 0.002  # decrease the learning rate
+#     model.min_alpha = model.alpha  # fix the learning rate, no decay
+#     model.train(taggeddoc, total_examples=model.corpus_count, epochs=model.iter)
+#
+#
+# model.save("doc2vec.model")
+model = Doc2Vec.load("doc2vec.model")
 
 
-print (classifier.score(test_arrays, test_labels))
+file = "C10/C10train/AlanCrosby/10306newsML.txt"
+st = open(str(file),'r').read()
+doc = st.strip().split(" ")
+new_vector = model.infer_vector(doc)
+
+
+#SVM classification
+result = []
+for i in range(1,10684):
+    string = str(i)
+    result.append(model.docvecs[string])
+
+
+svc = svm.SVC(kernel='linear')
+svc.fit(result)
+
+
+predicted = svc.predict(new_vector)
+
+print("Classification report for classifier %s:\n%s\n"
+      % (svc, metrics.classification_report(new_vector, predicted)))
+print("Confusion matrix:\n%s" % metrics.confusion_matrix(new_vector, predicted))
