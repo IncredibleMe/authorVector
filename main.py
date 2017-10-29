@@ -119,5 +119,15 @@ for file in file_list:
     all_vectors.append(new_vector)
 
 predicted = svc.predict(all_vectors)
-print (predicted)
+#print (predicted)
 
+list_common = []
+for a, b in zip(authors, predicted):
+    if a == b:
+        list_common.append(a)
+print (list_common)
+print ("Swsta vre8ikan %d apo ta 500", len(list_common))
+
+pososto = len(list_common)/500
+
+print ("%s epitixia", pososto)
