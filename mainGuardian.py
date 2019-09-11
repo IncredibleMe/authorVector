@@ -16,8 +16,8 @@ import multiprocessing
 cores = multiprocessing.cpu_count()
 
 docLabels = []
-folder_name = "Guardian10/World"
-test_folder = "Guardian10/Books"
+folder_name = "Guardian10/Politics"
+test_folder = "Guardian10/UK"
 authors = []
 
 doc_list = []
@@ -62,7 +62,8 @@ for doc, index in zip(doc_list, docLabels):
     taggeddoc.append(td)
 
 #dimiourgia montelou apo to sunolo protasewn twn keimenwn
-model = gensim.models.Doc2Vec(taggeddoc,  dm = 0,window=2, alpha=0.025, vector_size= 300, min_alpha=0.050, min_count=2, workers =cores)
+model = gensim.models.Doc2Vec(taggeddoc,  dm = 0,window=2, alpha=0.025, vector_size= 200, min_alpha=0.025, min_count=1, workers =cores)
+#model = gensim.models.Doc2Vec(taggeddoc,  dm = 0, alpha=0.025, vector_size= 20, min_alpha=0.025, min_count=0)
 
 
 for epoch in range(10):
@@ -93,7 +94,7 @@ for file in file_list:
         #sentences.append(doc)
         #print sentences
         sentences.extend(doc)
-        new_vector = model.infer_vector(sentences)
+    new_vector = model.infer_vector(sentences)
     all_vectors.append(new_vector)
 
 # #SVM classification
@@ -107,11 +108,15 @@ kernels = ['linear', 'rbf', 'poly']
 cs = [0.1, 1, 10, 100, 1000]
 gammas = [0.1, 1, 10, 100]
 
+# for kernel in kernels:
+#     for c in cs:
+#         for gam in gammas:
+#             svc = svm.SVC(kernel=kernel, C=c, gamma=gam).fit(all_vectors,authors)
+#             print(kernel+" |"+str(c)+" |"+str(gam))
+#             print((svc.score(all_vectors,authors))*100)
 
+svc = svm.SVC(kernel='linear', C=100, gamma=100) #0.64 Politics -World  0.66 Politics-BOoks Politics-UK 0.73
 
-
-
-svc = svm.SVC(kernel='linear', C=1000, gamma=10)
 svc.fit(all_vectors,authors)
 
 print("----------------------------")
@@ -157,12 +162,6 @@ for file in file_list:
     #print (sentences)
     all_vectors.append(new_vector)
 
-for kernel in kernels:
-    for c in cs:
-        for gam in gammas:
-            svc = svm.SVC(kernel=kernel, C=c, gamma=gam).fit(all_vectors,authors)
-            print(kernel+" |"+str(c)+" |"+str(gam))
-            print((svc.score(all_vectors,authors))*100)
 
 print ("authors" + str(len(authors)))
 #print ("All " + str(len(all_vectors)))

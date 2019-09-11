@@ -13,7 +13,6 @@ from gensim.models.doc2vec import TaggedDocument, Doc2Vec
 from sklearn import svm, metrics
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
-nltk.download('punkt')
 docLabels = []
 folder_name = "C10/C10train"
 authors = []
@@ -153,7 +152,7 @@ for file in file_list:
         new_vector = model.infer_vector(doc)
     all_vectors.append(new_vector)
 
-#predicted = svc.predict(2)
+predicted = svc.predict(2)
 #print (predicted)
 
 list_common = []
