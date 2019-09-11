@@ -52,7 +52,6 @@ for file in file_list:
 
 taggeddoc=[]
 
-
 for doc, index in zip(doc_list, docLabels):
     #print(nltk.word_tokenize(doc))
     td = TaggedDocument(words=nltk.word_tokenize(doc), tags=[str(index)])
